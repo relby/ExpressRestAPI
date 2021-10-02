@@ -3,9 +3,12 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const {queryParser, checkPaging} = require('./util')
+const axios = require('axios')
 
 // Constants
+const HOST = "127.0.0.1"
 const PORT = 3000
+
 
 // DB
 mongoose.connect('mongodb://localhost:27017/base')
@@ -36,6 +39,7 @@ const Product = mongoose.model('products', ProductsSchema)
 
 // Middleware
 app.use(express.json())
+
 
 // Routes
 app.get('/api/products', (req, res) => {
@@ -143,6 +147,7 @@ app.put('/api/products', (req, res) => {
         })
     })
 })
+
 
 // Server start
 app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))

@@ -20,6 +20,7 @@ module.exports.queryParser = query => {
 }
 
 module.exports.checkPaging = (elemOnPage, page) => {
+    if (elemOnPage === undefined) return {}
     elemOnPage = parseInt(elemOnPage)
     page = parseInt(page)
     elemOnPage = elemOnPage > 0 ? elemOnPage : ELEMENTS_ON_PAGE
