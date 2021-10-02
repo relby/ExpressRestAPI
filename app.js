@@ -11,6 +11,7 @@ mongoose.connect('mongodb://localhost:27017/base')
 
 const Schema = mongoose.Schema
 const ProductsSchema = new Schema({
+    id: Schema.ObjectId,
     name: {
         type: String,
         trim: true,
@@ -32,7 +33,9 @@ app.use(express.json())
 // Routes
 app.get('/api/products', (req, res) => {
     Product.find({}, (err, products) => {
-        if (err) return console.error(err);
+        if (err) return res.status(404).json({
+            message: 'Not found'
+        })
         products.map((value, index) => {
             products[index] = {
                 name: value.name,
@@ -41,6 +44,28 @@ app.get('/api/products', (req, res) => {
             }
         })
         res.status(200).json(products)
+    })
+})
+
+app.post('/api/products', (req, res) => {
+    const { name, price, left } = req.body
+    const product = new Product({
+        name: name,
+        price: price,
+        left: left
+    })
+    if (product.validateSync() instanceof mongoose.Error) {
+        return res.status(400).json({
+            message: 'Product didn\'t created'
+        })
+    }
+    product.save((err, data) => {
+        if (err) return res.status(400).json({
+            message: 'Product didn\'t created'
+        })
+        res.status(201).json({
+            message: `${data.name} created successfully`
+        })
     })
 })
 
