@@ -82,5 +82,16 @@ app.post('/api/products', (req, res) => {
     })
 })
 
+app.delete('/api/products/:name', (req, res) => {
+    Product.findOneAndDelete({name: req.params.name}, (err, product) => {
+        if (err || !product) return res.status(404).json({
+            message: 'Product not found'
+        })
+        res.status(200).json({
+            message: 'Product deleted'
+        })
+    })
+})
+
 // Server start
 app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
