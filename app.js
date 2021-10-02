@@ -123,5 +123,19 @@ app.put('/api/products/:name', (req, res) => {
     })
 })
 
+app.put('/api/products', (req, res) => {
+    const {name, price, left} = queryParser(req.query)
+    Product.updateMany({name: name, price: price, left: left}, req.body, (err, products) => {
+        if (err || !products.matchedCount) return res.status(404).json({
+            message: 'Products didn\'t update',
+            ok: false
+        })
+        res.status(200).json({
+            message: `${products.matchedCount} products updated`,
+            ok: true
+        })
+    })
+})
+
 // Server start
 app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
