@@ -9,7 +9,9 @@ module.exports = query => {
     else out.price['$exists'] = true
     if (query.left !== undefined) out.left['$eq'] = Number(query.left)
     else out.left['$exists'] = true
-    if (query.from !== undefined) out.price['$gte'] = query.from
-    if (query.to !== undefined) out.price['$lte'] = query.to
+    if (query.priceFrom !== undefined) out.price['$gte'] = query.priceFrom
+    if (query.priceTo !== undefined) out.price['$lte'] = query.priceTo
+    if (query.leftFrom !== undefined) out.left['$gte'] = query.leftFrom
+    if (query.leftTo !== undefined) out.left['$lte'] = query.leftTo
     return out
 }
