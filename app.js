@@ -96,5 +96,19 @@ app.delete('/api/products/:name', (req, res) => {
     })
 })
 
+app.delete('/api/products', (req, res) => {
+    const {name, price, left} = queryParser(req.query)
+    Product.deleteMany({name: name, price: price, left: left}, (err, products) => {
+        if (err || !products.deletedCount) return res.status(404).json({
+            message: 'Products not found',
+            ok: false
+        })
+        res.status(200).json({
+            message: `${products.deletedCount} products deleted`,
+            ok: true
+        })
+    })
+})
+
 // Server start
 app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
