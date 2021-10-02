@@ -40,10 +40,23 @@ app.get('/api/products', (req, res) => {
             products[index] = {
                 name: value.name,
                 price: value.price,
-                left: value.left,
+                left: value.left
             }
         })
         res.status(200).json(products)
+    })
+})
+
+app.get('/api/products/:name', (req, res) => {
+    Product.findOne({name: req.params.name}, (err, product) => {
+        if (err || !product) return res.status(404).json({
+            message: 'Not found'
+        })
+        res.status(200).json({
+            name: product.name,
+            price: product.price,
+            left: product.left
+        })
     })
 })
 
