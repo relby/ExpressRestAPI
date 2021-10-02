@@ -2,6 +2,7 @@
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
+const queryParser = require('./queryParser')
 
 // Constants
 const PORT = 3000
@@ -32,7 +33,8 @@ app.use(express.json())
 
 // Routes
 app.get('/api/products', (req, res) => {
-    Product.find({}, (err, products) => {
+    const {name, price, left} = queryParser(req.query)
+    Product.find({name: name, price: price, left: left}, null, {}, (err, products) => {
         if (err) return res.status(404).json({})
         products.map((value, index) => {
             products[index] = {
