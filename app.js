@@ -33,9 +33,7 @@ app.use(express.json())
 // Routes
 app.get('/api/products', (req, res) => {
     Product.find({}, (err, products) => {
-        if (err) return res.status(404).json({
-            message: 'Not found'
-        })
+        if (err) return res.status(404).json({})
         products.map((value, index) => {
             products[index] = {
                 name: value.name,
@@ -49,9 +47,7 @@ app.get('/api/products', (req, res) => {
 
 app.get('/api/products/:name', (req, res) => {
     Product.findOne({name: req.params.name}, (err, product) => {
-        if (err || !product) return res.status(404).json({
-            message: 'Not found'
-        })
+        if (err || !product) return res.status(404).json({})
         res.status(200).json({
             name: product.name,
             price: product.price,
@@ -69,15 +65,18 @@ app.post('/api/products', (req, res) => {
     })
     if (product.validateSync() instanceof mongoose.Error) {
         return res.status(400).json({
-            message: 'Product didn\'t created'
+            message: 'Product didn\'t created',
+            ok: false
         })
     }
     product.save((err, data) => {
         if (err) return res.status(400).json({
-            message: 'Product didn\'t created'
+            message: 'Product didn\'t created',
+            ok: false
         })
         res.status(201).json({
-            message: `${data.name} created successfully`
+            message: `Product ${data.name} created successfully`,
+            ok: true
         })
     })
 })
@@ -85,10 +84,12 @@ app.post('/api/products', (req, res) => {
 app.delete('/api/products/:name', (req, res) => {
     Product.findOneAndDelete({name: req.params.name}, (err, product) => {
         if (err || !product) return res.status(404).json({
-            message: 'Product not found'
+            message: 'Product not found',
+            ok: false
         })
         res.status(200).json({
-            message: 'Product deleted'
+            message: 'Product deleted',
+            ok: true
         })
     })
 })
