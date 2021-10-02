@@ -17,11 +17,17 @@ const ProductsSchema = new Schema({
         type: String,
         trim: true,
         unique: true,
+        required: true,
         minlength: 2
     },
-    price: Number,
+    price: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
     left: {
         type: Number,
+        min: 0,
         default: 0
     }
 })
