@@ -110,5 +110,18 @@ app.delete('/api/products', (req, res) => {
     })
 })
 
+app.put('/api/products/:name', (req, res) => {
+    Product.findOneAndUpdate({name: req.params.name}, req.body, (err, product) => {
+        if (err || !product) return res.status(404).json({
+            message: 'Product didn\'t update',
+            ok: false
+        })
+        res.status(200).json({
+            message: `${product.name} updated`,
+            ok: true
+        })
+    })
+})
+
 // Server start
 app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
