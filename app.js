@@ -2,7 +2,7 @@
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
-const queryParser = require('./queryParser')
+const {queryParser, checkPaging} = require('./util')
 
 // Constants
 const PORT = 3000
@@ -40,7 +40,8 @@ app.use(express.json())
 // Routes
 app.get('/api/products', (req, res) => {
     const {name, price, left} = queryParser(req.query)
-    Product.find({name: name, price: price, left: left}, null, {}, (err, products) => {
+    const options = checkPaging(req.query.elemOnPage, req.query.page)
+    Product.find({name: name, price: price, left: left}, null, options, (err, products) => {
         if (err) return res.status(404).json({})
         products.map((value, index) => {
             products[index] = {

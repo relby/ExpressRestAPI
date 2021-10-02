@@ -1,4 +1,7 @@
-module.exports = query => {
+const ELEMENTS_ON_PAGE = 5
+module.exports = { ELEMENTS_ON_PAGE }
+
+module.exports.queryParser = query => {
     let out = {}
     out.name = {}, out.price = {}, out.left = {}
     if (query.inStock !== undefined) out.left[JSON.parse(query.inStock.toLowerCase()) ? '$ne' : '$eq'] = 0
@@ -14,4 +17,15 @@ module.exports = query => {
     if (query.leftFrom !== undefined) out.left['$gte'] = query.leftFrom
     if (query.leftTo !== undefined) out.left['$lte'] = query.leftTo
     return out
+}
+
+module.exports.checkPaging = (elemOnPage, page) => {
+    elemOnPage = parseInt(elemOnPage)
+    page = parseInt(page)
+    elemOnPage = elemOnPage > 0 ? elemOnPage : ELEMENTS_ON_PAGE
+    page = page > 0 ? page : 1
+    return {
+        skip: elemOnPage * (page - 1),
+        limit: elemOnPage
+    }
 }
