@@ -3,10 +3,9 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const {queryParser, checkPaging} = require('./util')
-const axios = require('axios')
+
 
 // Constants
-const HOST = "127.0.0.1"
 const PORT = 3000
 
 
@@ -36,6 +35,7 @@ const ProductsSchema = new Schema({
 })
 
 const Product = mongoose.model('products', ProductsSchema)
+
 
 // Middleware
 app.use(express.json())
