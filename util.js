@@ -30,3 +30,11 @@ module.exports.checkPaging = (elemOnPage, page) => {
         limit: elemOnPage
     }
 }
+
+module.exports.createProductJSON = objectModel => {
+    return {
+        name: objectModel.name,
+        price: objectModel.price,
+        left: objectModel.left,
+    }
+}

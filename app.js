@@ -2,7 +2,7 @@
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
-const {queryParser, checkPaging} = require('./util')
+const {queryParser, checkPaging, createProductJSON} = require('./util')
 
 
 // Constants
@@ -42,34 +42,42 @@ app.use(express.json())
 
 
 // Routes
-app.get('/api/products', (req, res) => {
+app.get('/api/products', (req, res, next) => {
     const {name, price, left} = queryParser(req.query)
     const options = checkPaging(req.query.elemOnPage, req.query.page)
-    Product.find({name: name, price: price, left: left}, null, options, (err, products) => {
-        if (err) return res.status(404).json({})
-        products.map((value, index) => {
-            products[index] = {
-                name: value.name,
-                price: value.price,
-                left: value.left
+    Product.find({name: name, price: price, left: left}, null, options).exec()
+        .then(products => {
+            for (let i = 0; i < products.length; i++) {
+                products[i] = createProductJSON(products[i])
             }
+            res.status(200).json({
+                message: `${products.length} products recieved`,
+                data: products
+            })
         })
-        res.status(200).json(products)
-    })
+        .catch(reason => {
+            next(reason)
+        })
 })
 
-app.get('/api/products/:name', (req, res) => {
-    Product.findOne({name: req.params.name}, (err, product) => {
-        if (err || !product) return res.status(404).json({})
-        res.status(200).json({
-            name: product.name,
-            price: product.price,
-            left: product.left
+app.get('/api/products/:name', (req, res, next) => {
+    Product.findOne({name: req.params.name}).exec()
+        .then(product => {
+            if (product === null) res.status(404).json({
+                message: 'Product didn\'t recieved',
+                data: {}
+            })
+            else res.status(200).json({
+                message: 'Product recieved successfully',
+                data: createProductJSON(product)
+            })
         })
-    })
+        .catch(reason => {
+            next(reason)
+        })
 })
 
-app.post('/api/products', (req, res) => {
+app.post('/api/products', (req, res, next) => {
     const { name, price, left } = req.body
     const product = new Product({
         name: name,
@@ -77,74 +85,64 @@ app.post('/api/products', (req, res) => {
         left: left
     })
     if (product.validateSync() instanceof mongoose.Error) {
-        return res.status(400).json({
-            message: 'Product didn\'t created',
-            ok: false
-        })
+        return next(product.validateSync())
     }
-    product.save((err, data) => {
-        if (err) return res.status(400).json({
-            message: 'Product didn\'t created',
-            ok: false
+    product.save()
+        .then(savedProduct => {
+            res.status(201).json({
+                message: `Product ${savedProduct.name} created successfully`,
+                data: createProductJSON(savedProduct)
+            })
         })
-        res.status(201).json({
-            message: `Product ${data.name} created successfully`,
-            ok: true
+        .catch(reason => {
+            next(reason)
         })
-    })
 })
 
-app.delete('/api/products/:name', (req, res) => {
-    Product.findOneAndDelete({name: req.params.name}, (err, product) => {
-        if (err || !product) return res.status(404).json({
-            message: 'Product not found',
-            ok: false
+app.delete('/api/products/:name', (req, res, next) => {
+    Product.findOneAndDelete({name: req.params.name}).exec()
+        .then(product => {
+            res.status(200).json({
+                message: 'Product deleted',
+                data: createProductJSON(product)
+            })
         })
-        res.status(200).json({
-            message: 'Product deleted',
-            ok: true
+        .catch(reason => {
+            next(reason)
         })
-    })
 })
 
-app.delete('/api/products', (req, res) => {
-    const {name, price, left} = queryParser(req.query)
-    Product.deleteMany({name: name, price: price, left: left}, (err, products) => {
-        if (err || !products.deletedCount) return res.status(404).json({
-            message: 'Products not found',
-            ok: false
+app.put('/api/products/:name', (req, res, next) => {
+    Product.findOneAndUpdate({name: req.params.name}, req.body).exec()
+        .then(product => {
+            res.status(200).json({
+                message: `${product.name} updated`,
+                data: createProductJSON(product)
+            })
         })
-        res.status(200).json({
-            message: `${products.deletedCount} products deleted`,
-            ok: true
+        .catch(reason => {
+            next(reason)
         })
-    })
 })
 
-app.put('/api/products/:name', (req, res) => {
-    Product.findOneAndUpdate({name: req.params.name}, req.body, (err, product) => {
-        if (err || !product) return res.status(404).json({
-            message: 'Product didn\'t update',
-            ok: false
-        })
-        res.status(200).json({
-            message: `${product.name} updated`,
-            ok: true
-        })
-    })
-})
-
-app.put('/api/products', (req, res) => {
-    const {name, price, left} = queryParser(req.query)
-    Product.updateMany({name: name, price: price, left: left}, req.body, (err, products) => {
-        if (err || !products.matchedCount) return res.status(404).json({
-            message: 'Products didn\'t update',
-            ok: false
-        })
-        res.status(200).json({
-            message: `${products.matchedCount} products updated`,
-            ok: true
-        })
+app.use('/api/products', (err, req, res, next) => {
+    let status = 500
+    let message = err.message
+    switch (err.name) {
+        case 'TypeError':
+            status = 404
+            message = 'Product not found'
+            break
+        case 'MongoServerError':
+            status = 409
+            message = 'Product with this name already exists'
+            break
+        case 'ValidationError':
+            status = 409
+            message = 'Product validation failed'
+    }
+    res.status(status).json({
+        message: message
     })
 })
 
