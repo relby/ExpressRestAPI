@@ -29,8 +29,8 @@ const ProductsSchema = new Schema({
     },
     left: {
         type: Number,
-        min: 0,
-        default: 0
+        required: true,
+        min: 0
     }
 })
 
@@ -51,7 +51,7 @@ app.get('/api/products', (req, res, next) => {
                 products[i] = createProductJSON(products[i])
             }
             res.status(200).json({
-                message: `${products.length} products recieved`,
+                message: `${products.length} products were recieved`,
                 data: products
             })
         })
@@ -64,11 +64,11 @@ app.get('/api/products/:name', (req, res, next) => {
     Product.findOne({name: req.params.name}).exec()
         .then(product => {
             if (product === null) res.status(404).json({
-                message: 'Product didn\'t recieved',
+                message: 'Product wasn\'t recieved',
                 data: {}
             })
             else res.status(200).json({
-                message: 'Product recieved successfully',
+                message: 'Product was recieved successfully',
                 data: createProductJSON(product)
             })
         })
@@ -84,8 +84,9 @@ app.post('/api/products', (req, res, next) => {
         price: price,
         left: left
     })
-    if (product.validateSync() instanceof mongoose.Error) {
-        return next(product.validateSync())
+    const validationError = product.validateSync()
+    if (validationError) {
+        return next(validationError)
     }
     product.save()
         .then(savedProduct => {
@@ -113,11 +114,24 @@ app.delete('/api/products/:name', (req, res, next) => {
 })
 
 app.put('/api/products/:name', (req, res, next) => {
+    const productToUpdate = new Product({
+        name: req.body.name,
+        price: req.body.price,
+        left: req.body.left
+    })
+    const validationError = productToUpdate.validateSync(Object.keys(req.body))
+    if (validationError) {
+        return next(validationError)
+    }
     Product.findOneAndUpdate({name: req.params.name}, req.body).exec()
         .then(product => {
             res.status(200).json({
                 message: `${product.name} updated`,
-                data: createProductJSON(product)
+                data: {
+                    name: productToUpdate.name ?? product.name,
+                    price: productToUpdate.price ?? product.price,
+                    left: productToUpdate.left ?? product.left
+                }
             })
         })
         .catch(reason => {
@@ -139,7 +153,7 @@ app.use('/api/products', (err, req, res, next) => {
             break
         case 'ValidationError':
             status = 409
-            message = 'Product validation failed'
+            message = 'Product didn\'t created/updated. Validation failed'
     }
     res.status(status).json({
         message: message
