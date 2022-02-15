@@ -1,39 +1,39 @@
 // Includes
-const express = require('express')
-const app = express()
-const mongoose = require('mongoose')
-const {queryParser, checkPaging, createProductJSON} = require('./util')
-const Product = require("./schemas/Product")
+const express = require('express');
+const app = express();
+const mongoose = require('mongoose');
+const {queryParser, checkPaging, createProductJSON} = require('./util');
+const Product = require('./schemas/Product');
 
 
 // Constants
-const PORT = 3000
+const PORT = 3000;
 
 
 // DB
-mongoose.connect('mongodb://localhost:27017/base')
+mongoose.connect('mongodb://localhost:27017/base');
 
 // Middleware
-app.use(express.json())
+app.use(express.json());
 
 
 // Routes
 app.get('/api/products', async (req, res, next) => {
-    const {name, price, left} = queryParser(req.query)
-    const options = checkPaging(req.query.elemOnPage, req.query.page)
+    const {name, price, left} = queryParser(req.query);
+    const options = checkPaging(req.query.elemOnPage, req.query.page);
     try {
-        const products = await Product.find({name, price, left}, null, options)
+        const products = await Product.find({name, price, left}, null, options);
         for (let i = 0; i < products.length; i++) {
-            products[i] = createProductJSON(products[i])
+            products[i] = createProductJSON(products[i]);
         }
         res.status(200).json({
             message: `${products.length} products were recieved`,
             data: products
-        })
+        });
     } catch (e) {
         next(e);
     }
-})
+});
 
 app.get('/api/products/:name', async (req, res, next) => {
     try {
@@ -42,39 +42,39 @@ app.get('/api/products/:name', async (req, res, next) => {
             res.status(404).json({
                 message: 'Product wasn\'t recieved',
                 data: {}
-            })
+            });
         } else {
             res.status(200).json({
                 message: 'Product was recieved successfully',
                 data: createProductJSON(product)
-            })
+            });
         }
     } catch (e) {
         next(e);
     }
-})
+});
 
 app.post('/api/products', async (req, res, next) => {
-    const { name, price, left } = req.body
+    const { name, price, left } = req.body;
     const product = new Product({
         name: name,
         price: price,
         left: left
-    })
-    const validationError = product.validateSync()
+    });
+    const validationError = product.validateSync();
     if (validationError) {
-        return next(validationError)
+        return next(validationError);
     }
     try {
         await product.save();
         res.status(201).json({
             message: `Product ${product.name} created successfully`,
             data: createProductJSON(product)
-        })
+        });
     } catch (e) {
-        next(e)
+        next(e);
     }
-})
+});
 
 app.delete('/api/products/:name', async (req, res, next) => {
     try {
@@ -82,21 +82,21 @@ app.delete('/api/products/:name', async (req, res, next) => {
         res.status(200).json({
             message: 'Product deleted',
             data: createProductJSON(product)
-        })
+        });
     } catch (e) {
         next(e);
     }
-})
+});
 
 app.put('/api/products/:name', async (req, res, next) => {
     const productToUpdate = new Product({
         name: req.body.name,
         price: req.body.price,
         left: req.body.left
-    })
+    });
     const validationError = productToUpdate.validateSync(Object.keys(req.body));
     if (validationError) {
-        return next(validationError)
+        return next(validationError);
     }
     try {
         const product = await Product.findOneAndUpdate({name: req.params.name}, req.body);
@@ -107,15 +107,15 @@ app.put('/api/products/:name', async (req, res, next) => {
                 price: productToUpdate.price ?? product.price,
                 left: productToUpdate.left ?? product.left
             }
-        })
+        });
     } catch (e) {
         next(e);
     }
-})
+});
 
 app.use('/api/products', (err, req, res, next) => {
-    let status = 500
-    let message = err.message
+    let status = 500;
+    let message = err.message;
     switch (err.name) {
         case 'TypeError':
             status = 404
@@ -131,11 +131,11 @@ app.use('/api/products', (err, req, res, next) => {
     }
     res.status(status).json({
         message: message
-    })
-})
+    });
+});
 
 
 // Server start
 mongoose.connection.once('open', () => {
-    app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
-})
+    app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`));
+});
