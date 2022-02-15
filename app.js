@@ -42,42 +42,43 @@ app.use(express.json())
 
 
 // Routes
-app.get('/api/products', (req, res, next) => {
+app.get('/api/products', async (req, res, next) => {
     const {name, price, left} = queryParser(req.query)
     const options = checkPaging(req.query.elemOnPage, req.query.page)
-    Product.find({name: name, price: price, left: left}, null, options).exec()
-        .then(products => {
-            for (let i = 0; i < products.length; i++) {
-                products[i] = createProductJSON(products[i])
-            }
-            res.status(200).json({
-                message: `${products.length} products were recieved`,
-                data: products
-            })
+    try {
+        const products = await Product.find({name, price, left}, null, options)
+        for (let i = 0; i < products.length; i++) {
+            products[i] = createProductJSON(products[i])
+        }
+        res.status(200).json({
+            message: `${products.length} products were recieved`,
+            data: products
         })
-        .catch(reason => {
-            next(reason)
-        })
+    } catch (e) {
+        next(e);
+    }
 })
 
-app.get('/api/products/:name', (req, res, next) => {
-    Product.findOne({name: req.params.name}).exec()
-        .then(product => {
-            if (product === null) res.status(404).json({
+app.get('/api/products/:name', async (req, res, next) => {
+    try {
+        const product = await Product.findOne({name: req.params.name});
+        if (!product) {
+            res.status(404).json({
                 message: 'Product wasn\'t recieved',
                 data: {}
             })
-            else res.status(200).json({
+        } else {
+            res.status(200).json({
                 message: 'Product was recieved successfully',
                 data: createProductJSON(product)
             })
-        })
-        .catch(reason => {
-            next(reason)
-        })
+        }
+    } catch (e) {
+        next(e);
+    }
 })
 
-app.post('/api/products', (req, res, next) => {
+app.post('/api/products', async (req, res, next) => {
     const { name, price, left } = req.body
     const product = new Product({
         name: name,
@@ -88,55 +89,52 @@ app.post('/api/products', (req, res, next) => {
     if (validationError) {
         return next(validationError)
     }
-    product.save()
-        .then(savedProduct => {
-            res.status(201).json({
-                message: `Product ${savedProduct.name} created successfully`,
-                data: createProductJSON(savedProduct)
-            })
+    try {
+        await product.save();
+        res.status(201).json({
+            message: `Product ${product.name} created successfully`,
+            data: createProductJSON(product)
         })
-        .catch(reason => {
-            next(reason)
-        })
+    } catch (e) {
+        next(e)
+    }
 })
 
-app.delete('/api/products/:name', (req, res, next) => {
-    Product.findOneAndDelete({name: req.params.name}).exec()
-        .then(product => {
-            res.status(200).json({
-                message: 'Product deleted',
-                data: createProductJSON(product)
-            })
+app.delete('/api/products/:name', async (req, res, next) => {
+    try {
+        const product = await Product.findOneAndDelete({name: req.params.name});
+        res.status(200).json({
+            message: 'Product deleted',
+            data: createProductJSON(product)
         })
-        .catch(reason => {
-            next(reason)
-        })
+    } catch (e) {
+        next(e);
+    }
 })
 
-app.put('/api/products/:name', (req, res, next) => {
+app.put('/api/products/:name', async (req, res, next) => {
     const productToUpdate = new Product({
         name: req.body.name,
         price: req.body.price,
         left: req.body.left
     })
-    const validationError = productToUpdate.validateSync(Object.keys(req.body))
+    const validationError = productToUpdate.validateSync(Object.keys(req.body));
     if (validationError) {
         return next(validationError)
     }
-    Product.findOneAndUpdate({name: req.params.name}, req.body).exec()
-        .then(product => {
-            res.status(200).json({
-                message: `${product.name} updated`,
-                data: {
-                    name: productToUpdate.name ?? product.name,
-                    price: productToUpdate.price ?? product.price,
-                    left: productToUpdate.left ?? product.left
-                }
-            })
+    try {
+        const product = await Product.findOneAndUpdate({name: req.params.name}, req.body);
+        res.status(200).json({
+            message: `${product.name} updated`,
+            data: {
+                name: productToUpdate.name ?? product.name,
+                price: productToUpdate.price ?? product.price,
+                left: productToUpdate.left ?? product.left
+            }
         })
-        .catch(reason => {
-            next(reason)
-        })
+    } catch (e) {
+        next(e);
+    }
 })
 
 app.use('/api/products', (err, req, res, next) => {
