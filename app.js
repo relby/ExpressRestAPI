@@ -136,4 +136,6 @@ app.use('/api/products', (err, req, res, next) => {
 
 
 // Server start
-app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
+mongoose.connection.once('open', () => {
+    app.listen(PORT, () => console.log(`Server has been started on http://localhost:${PORT}`))
+})
