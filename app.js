@@ -3,6 +3,7 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const {queryParser, checkPaging, createProductJSON} = require('./util')
+const Product = require("./schemas/Product")
 
 
 // Constants
@@ -11,31 +12,6 @@ const PORT = 3000
 
 // DB
 mongoose.connect('mongodb://localhost:27017/base')
-
-const Schema = mongoose.Schema
-const ProductsSchema = new Schema({
-    id: Schema.ObjectId,
-    name: {
-        type: String,
-        trim: true,
-        unique: true,
-        required: true,
-        minlength: 2
-    },
-    price: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-    left: {
-        type: Number,
-        required: true,
-        min: 0
-    }
-})
-
-const Product = mongoose.model('products', ProductsSchema)
-
 
 // Middleware
 app.use(express.json())
