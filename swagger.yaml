@@ -1,0 +1,111 @@
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.0"
+  title: "Products API"
+host: "locahost:3000"
+basePath: "/api"
+tags:
+- name: "products"
+paths:
+  /products:
+    get:
+      tags:
+      - "products"
+      summary: "Get all products with specified query parameters"
+      parameters:
+      - name: "name"
+        in: "query"
+        type: "string"
+      - name: "price"
+        in: "query"
+        type: "number"
+      - name: "left"
+        in: "query"
+        type: "integer"
+      - name: "elemOnPage"
+        in: "query"
+        type: "integer"
+      - name: "page"
+        in: "query"
+        type: "integer"
+      responses:
+        "200":
+          description: "ok"
+          schema:
+            type: "array"
+            items: 
+              $ref: "#/definitions/Product"
+    post:
+      tags:
+      - "products"
+      summary: "Create new product"
+      parameters:
+      - name: "body"
+        in: "body"
+        schema:
+          $ref: "#/definitions/Product"
+      responses:
+        "200":
+          description: "ok"
+        "409":
+          description: "Product didn't created/updated. Validation failed"
+  /products/{name}:
+    get:
+      tags:
+      - "products"
+      summary: "Get product with name"
+      parameters:
+      - name: "name"
+        in: "path"
+        type: "string"
+        required: true
+      responses:
+        "200":
+          description: "ok"
+        "404":
+          description: "Product not found"
+    put:
+      tags:
+      - "products"
+      summary: "Get product with name"
+      parameters:
+      - name: "name"
+        in: "path"
+        type: "string"
+        required: true
+      - name: "body"
+        in: "body"
+        schema:
+          $ref: "#/definitions/Product"
+      responses:
+        "200":
+          description: "ok"
+        "404":
+          description: "Product not found"
+        "409":
+          description: "Product didn't created/updated. Validation failed"
+    delete:
+      tags:
+      - "products"
+      summary: "Get product with name"
+      parameters:
+      - name: "name"
+        in: "path"
+        type: "string"
+        required: true
+      responses:
+        "200":
+          description: "ok"
+        "404":
+          description: "Product not found"
+definitions:
+  Product:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      price:
+        type: "number"
+      left:
+        type: "integer"
